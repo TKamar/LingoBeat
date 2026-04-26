@@ -1,3 +1,10 @@
+// src/lib/types.ts
+// Shared domain types for LingoBeat.
+// LyricWord    — atomic token output from LRCParser; consumed by SyncEngine binary search.
+// LyricLine    — groups words by line; wordStart/wordEnd are half-open indices into words[].
+// ParsedLyrics — contract between LRCParser and all downstream consumers (engine, stores, DB).
+// Song         — lightweight metadata DTO; mirrors the Prisma Song model (omits created_at).
+
 export interface LyricWord {
   text: string
   start_ms: number
@@ -7,7 +14,7 @@ export interface LyricWord {
 }
 
 export interface LyricLine {
-  lineIndex: number
+  lineIndex: number   // equals position in ParsedLyrics.lines[]; kept for O(1) reverse lookup
   start_ms: number
   end_ms: number
   wordStart: number   // inclusive index into words[]
