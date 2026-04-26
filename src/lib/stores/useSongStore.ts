@@ -23,6 +23,6 @@ export const useSongStore = create<SongSlice>((set) => ({
   song: null,
   lyrics: null,
   lineForWord: [],
-  setSong: (song) => set({ song }),
+  setSong: (song) => set({ song, lyrics: null, lineForWord: [] }),
   setLyrics: (lyrics) => set({ lyrics, lineForWord: buildLineForWord(lyrics) }),
 }))

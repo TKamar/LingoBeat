@@ -17,10 +17,13 @@ export const usePlayerStore = create<PlayerSlice>((set, get) => ({
   bridge: null,
   state: 'idle',
   duration_ms: 0,
-  setBridge: (bridge) => set({ bridge }),
+  setBridge: (bridge) => {
+    get().bridge?.destroy()
+    set({ bridge })
+  },
   setState: (state) => set({ state }),
   setDuration: (duration_ms) => set({ duration_ms }),
-  play: () => get().bridge?.play(),
+  play: () => { void get().bridge?.play() },
   pause: () => get().bridge?.pause(),
   seek: (ms) => get().bridge?.seek(ms),
 }))
