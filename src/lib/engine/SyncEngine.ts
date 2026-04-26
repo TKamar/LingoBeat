@@ -9,16 +9,24 @@ export interface SyncState {
 
 type SyncListener = (state: SyncState) => void
 
+const UNINITIALIZED_WORD_INDEX = -2 // any value binarySearch never returns
+
 export class SyncEngine {
   private rafId: number | null = null
-  private lastWordIndex = -2  // sentinel: force first emit on start
+  private lastWordIndex = UNINITIALIZED_WORD_INDEX
   private listeners: Set<SyncListener> = new Set()
 
   constructor(
     private bridge: MediaBridge,
     private words: LyricWord[],
     private lineForWord: number[],  // parallel array: lineForWord[i] = line index for words[i]
-  ) {}
+  ) {
+    if (lineForWord.length !== words.length) {
+      throw new Error(
+        `SyncEngine: lineForWord.length (${lineForWord.length}) must equal words.length (${words.length})`
+      )
+    }
+  }
 
   /**
    * Binary search: find the last word whose start_ms <= currentMs.
@@ -48,7 +56,7 @@ export class SyncEngine {
         this.lastWordIndex = wordIdx
         this.notify({
           activeWordIndex: wordIdx,
-          activeLineIndex: wordIdx >= 0 ? (this.lineForWord[wordIdx] ?? -1) : -1,
+          activeLineIndex: wordIdx >= 0 ? this.lineForWord[wordIdx] : -1,
         })
       }
       this.rafId = requestAnimationFrame(tick)
@@ -69,11 +77,12 @@ export class SyncEngine {
   }
 
   private notify(state: SyncState) {
-    this.listeners.forEach(fn => fn(state))
+    for (const fn of [...this.listeners]) fn(state)
   }
 
   destroy() {
     this.stop()
     this.listeners.clear()
+    this.lastWordIndex = UNINITIALIZED_WORD_INDEX
   }
 }
