@@ -18,21 +18,27 @@ export async function GET(req: NextRequest) {
   const params = new URLSearchParams({ track_name, artist_name })
   if (duration) params.set('duration', duration)
 
-  const upstream = await fetch(`${LRCLIB_BASE}?${params}`, {
-    headers: { 'Lrclib-Client': 'LingoBeat/0.1' },
-    next: { revalidate: 86400 },
-  })
+  let upstream: Response
+  try {
+    upstream = await fetch(`${LRCLIB_BASE}?${params}`, {
+      headers: { 'Lrclib-Client': 'LingoBeat/0.1' },
+      next: { revalidate: 86400 },
+    })
+  } catch {
+    return NextResponse.json({ error: 'Upstream unreachable' }, { status: 502 })
+  }
 
   if (!upstream.ok) {
-    return NextResponse.json({ error: 'Lyrics not found' }, { status: 404 })
+    const status = upstream.status === 404 ? 404 : 502
+    return NextResponse.json({ error: 'Lyrics not found' }, { status })
   }
 
   const data = await upstream.json()
   return NextResponse.json({
     syncedLyrics: data.syncedLyrics ?? null,
     plainLyrics:  data.plainLyrics  ?? null,
-    trackName:    data.trackName,
-    artistName:   data.artistName,
-    duration:     data.duration,
+    trackName:    data.trackName    ?? null,
+    artistName:   data.artistName   ?? null,
+    duration:     data.duration     ?? null,
   })
 }

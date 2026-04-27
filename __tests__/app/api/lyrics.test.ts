@@ -63,4 +63,11 @@ describe('GET /api/lyrics', () => {
     const calledUrl = (global.fetch as jest.Mock).mock.calls[0][0] as string
     expect(calledUrl).toContain('duration=233')
   })
+
+  it('returns 502 when fetch throws a network error', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValue(new TypeError('fetch failed'))
+    const req = makeRequest({ track_name: 'Papaoutai', artist_name: 'Stromae' })
+    const res = await GET(req)
+    expect(res.status).toBe(502)
+  })
 })
