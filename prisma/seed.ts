@@ -23,11 +23,11 @@ async function main() {
   console.log('Seeding database…')
 
   const user = await prisma.user.upsert({
-    where: { email: 'tomer.kamar@gmail.com' },
+    where: { email: 'demo@lingobeat.dev' },
     update: {},
     create: {
-      email: 'tomer.kamar@gmail.com',
-      name: 'Tomer',
+      email: 'demo@lingobeat.dev',
+      name: 'Demo User',
       native_lang: 'en',
     },
   })

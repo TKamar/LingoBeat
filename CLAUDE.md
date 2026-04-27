@@ -221,8 +221,8 @@ For Sprint 2 development, use this mock user object:
 ```typescript
 const MOCK_USER = {
   id: 'mock-user-001',
-  email: 'tomer.kamar@gmail.com',
-  name: 'Tomer',
+  email: 'demo@lingobeat.dev',
+  name: 'Demo User',
   native_lang: 'en',
 }
 ```
