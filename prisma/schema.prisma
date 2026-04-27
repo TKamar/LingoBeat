@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
+// prisma/schema.prisma
+// NOTE: Prisma 7 is installed. Generator is "prisma-client" (not "prisma-client-js").
+// DATABASE_URL is read via prisma.config.ts (already exists) — do NOT add url to datasource.
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,51 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  native_lang String   @default("en")
+  created_at  DateTime @default(now())
+}
+
+model Song {
+  id            String   @id @default(uuid())
+  title         String
+  artist        String
+  language_code String
+  duration_ms   Int
+  media_type    String   // 'html5' | 'youtube' | 'spotify'
+  media_id      String
+  lrclib_id     Int?
+  created_at    DateTime @default(now())
+
+  lyrics     Lyrics?
+  difficulty SongDifficulty?
+}
+
+// Words and lines stored as JSONB for flexibility
+// words: LyricWord[] — { text, romanization, start_ms, end_ms, cefr_level }
+// lines: LyricLine[] — { lineIndex, start_ms, end_ms, wordStart, wordEnd }
+model Lyrics {
+  id         String   @id @default(uuid())
+  song_id    String   @unique
+  words      Json
+  lines      Json
+  created_at DateTime @default(now())
+
+  song Song @relation(fields: [song_id], references: [id], onDelete: Cascade)
+}
+
+model SongDifficulty {
+  song_id          String   @id
+  vocab_cefr       String   // A1–C2
+  audio_speed_wpm  Float
+  grammar_score    Float    // 1–10
+  composite_level  String   // A1–C2
+  computed_at      DateTime @default(now())
+
+  song Song @relation(fields: [song_id], references: [id], onDelete: Cascade)
 }
