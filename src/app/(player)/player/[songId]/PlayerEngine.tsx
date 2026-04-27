@@ -23,7 +23,6 @@ export function PlayerEngine({ audioSrc }: Props) {
 
     const bridge = new HTML5AudioAdapter(audioSrc)
     setBridge(bridge)
-    setDuration(bridge.getDuration())
 
     const unsubPlay     = bridge.on('play',           () => setPlayerState('playing'))
     const unsubPause    = bridge.on('pause',          () => setPlayerState('paused'))
@@ -31,12 +30,13 @@ export function PlayerEngine({ audioSrc }: Props) {
     const unsubDuration = bridge.on('durationchange', () => setDuration(bridge.getDuration()))
 
     const engine = new SyncEngine(bridge, words, lineForWord)
-    engine.subscribe(({ activeWordIndex, activeLineIndex }) => {
+    const unsubSync = engine.subscribe(({ activeWordIndex, activeLineIndex }) => {
       setSync(activeWordIndex, activeLineIndex)
     })
     engine.start()
 
     return () => {
+      unsubSync()
       engine.destroy()
       bridge.destroy()
       unsubPlay()
