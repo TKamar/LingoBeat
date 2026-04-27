@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { LyricWord } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -9,10 +10,9 @@ interface Props {
   onSeek: (ms: number) => void
 }
 
-export function WordToken({ word, index, isActive, onSeek }: Props) {
+export const WordToken = React.memo(function WordToken({ word, index, isActive, onSeek }: Props) {
   return (
     <span
-      key={index}
       onClick={() => onSeek(word.start_ms)}
       className={cn(
         'inline-block px-0.5 rounded cursor-pointer transition-colors duration-75',
@@ -25,4 +25,4 @@ export function WordToken({ word, index, isActive, onSeek }: Props) {
       {word.text}
     </span>
   )
-}
+})

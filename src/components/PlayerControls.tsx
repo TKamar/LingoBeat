@@ -13,7 +13,12 @@ function formatTime(ms: number) {
 }
 
 export function PlayerControls() {
-  const { bridge, state, duration_ms, play, pause, seek } = usePlayerStore()
+  const bridge = usePlayerStore(s => s.bridge)
+  const state = usePlayerStore(s => s.state)
+  const duration_ms = usePlayerStore(s => s.duration_ms)
+  const play = usePlayerStore(s => s.play)
+  const pause = usePlayerStore(s => s.pause)
+  const seek = usePlayerStore(s => s.seek)
   const [currentMs, setCurrentMs] = useState(0)
 
   useEffect(() => {

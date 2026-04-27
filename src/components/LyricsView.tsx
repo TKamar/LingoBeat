@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useSyncStore } from '@/lib/stores/useSyncStore'
 import { useSongStore } from '@/lib/stores/useSongStore'
 import { usePlayerStore } from '@/lib/stores/usePlayerStore'
@@ -11,7 +11,9 @@ export function LyricsView() {
   const { words, lines } = lyricsData ?? { words: [], lines: [] }
   const activeWordIndex = useSyncStore(s => s.activeWordIndex)
   const activeLineIndex = useSyncStore(s => s.activeLineIndex)
-  const seek = usePlayerStore(s => s.seek)
+  const handleSeek = useCallback((ms: number) => {
+    usePlayerStore.getState().seek(ms)
+  }, [])
   const activeLineRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function LyricsView() {
                   word={word}
                   index={wordIdx}
                   isActive={wordIdx === activeWordIndex}
-                  onSeek={seek}
+                  onSeek={handleSeek}
                 />
               )
             })}
