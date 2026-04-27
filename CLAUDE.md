@@ -23,8 +23,10 @@ LingoBeat is an audio-first language learning app. Users learn any language by l
 | shadcn/ui | 4.x | **base-nova style** using `@base-ui/react`. NOT `@radix-ui`. |
 | `@base-ui/react` | 1.4.1 | Replaces Radix UI in this install. Slider API differs — see below. |
 | Zustand | 5.0.12 | |
-| Prisma | **7.x** | Breaking changes vs Prisma 6 — see below. |
-| PostgreSQL | Neon (hosted) | |
+| Prisma | **7.x** | Breaking changes vs Prisma 6 — no built-in engine, requires driver adapter. |
+| `pg` | 8.x | PostgreSQL driver used by Prisma 7 adapter |
+| `@prisma/adapter-pg` | 7.x | Prisma 7 driver adapter for `pg` |
+| PostgreSQL | Docker (local) or Neon (production) | Port 5433 locally to avoid conflict with system postgres |
 | Jest | 30.x | With `next/jest` SWC transformer. No `ts-jest`. |
 | `lucide-react` | 1.11.0 | |
 | `framer-motion` | 12.x | Installed, not yet used in Sprint 1 UI. |
@@ -37,9 +39,9 @@ LingoBeat is an audio-first language learning app. Users learn any language by l
 
 ### Prisma 7 (not 6)
 
-Prisma 7 has breaking changes from Prisma 6:
+Prisma 7 has three major breaking changes from Prisma 6:
 
-**Generator** — must use `"prisma-client"` not `"prisma-client-js"`:
+**1. Generator** — must use `"prisma-client"` not `"prisma-client-js"`:
 ```prisma
 generator client {
   provider = "prisma-client"
@@ -47,14 +49,17 @@ generator client {
 }
 ```
 
-**Database URL** — lives in `prisma.config.ts`, NOT in the schema `datasource` block:
+**2. Database URL** — lives in `prisma.config.ts`, NOT in the schema `datasource` block. Also configures the seed command:
 ```typescript
 // prisma.config.ts (already exists — do not recreate)
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: { path: "prisma/migrations" },
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",  // registered here, not in package.json
+  },
   datasource: { url: process.env["DATABASE_URL"] },
 });
 ```
@@ -67,6 +72,39 @@ datasource db {
   provider = "postgresql"
 }
 ```
+
+**3. No built-in query engine — requires a driver adapter.** Prisma 7 dropped the Rust binary engine. All runtime PrismaClient usage must pass a driver adapter:
+
+```typescript
+// src/lib/db.ts — THE ONLY place PrismaClient should be instantiated
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from '@/generated/prisma/client'
+
+// Note: import from /client — Prisma 7 has no index.ts in the generated output
+// Note: @/generated/prisma, not @prisma/client
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
+
+function createPrismaClient() {
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+  const adapter = new PrismaPg(pool)
+  return new PrismaClient({ adapter })
+}
+
+export const db = globalForPrisma.prisma ?? createPrismaClient()
+
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = db
+}
+```
+
+**Import path for generated client:** Always use `@/generated/prisma/client` (with `/client`). There is no `index.ts` — the entry point is `client.ts`.
+
+**Constructor options that do NOT exist in Prisma 7** (they existed in Prisma 6):
+- `datasourceUrl` — removed
+- `datasources` — removed
+- Use the `adapter` option instead.
 
 ### shadcn base-nova / @base-ui/react Slider
 
@@ -110,34 +148,54 @@ Next.js route handlers use Web Fetch API globals (`Request`, `Response`, `NextRe
 
 ## Running the Project
 
+### Prerequisites
+- **Node.js** 20+ 
+- **Docker Desktop** (for local PostgreSQL) — already installed on this machine. Start it from the Start menu if it's not running. The CLI is at `C:\Program Files\Docker\Docker\resources\bin\docker.exe`.
+
 ### First time setup
 
 ```bash
 cd C:/Projects/LingoBeat/lingobeat
 
-# 1. Install dependencies (already done)
-npm install
+# 1. Start the database container (port 5433 — avoids conflict with system postgres on 5432)
+npm run db:up
 
-# 2. Create .env from example
+# 2. Copy .env
 cp .env.example .env
-# Edit .env — add your Neon connection string:
-# DATABASE_URL="postgresql://username:password@host/lingobeat?sslmode=require"
+# .env already has the correct Docker URL:
+# DATABASE_URL="postgresql://lingobeat:lingobeat@127.0.0.1:5433/lingobeat"
 
-# 3. Run Prisma migration (creates all tables in Neon)
+# 3. Run migrations (creates all tables)
 npx prisma migrate dev --name init
 
-# 4. Generate Prisma client
+# 4. Generate Prisma client (creates src/generated/prisma/)
 npx prisma generate
+
+# 5. Seed demo data (demo user + Stromae song + lyrics)
+npx prisma db seed
 ```
 
 ### Daily development
 
 ```bash
-npm run dev          # Start dev server at http://localhost:3000
+npm run db:up        # Start database container (if not running)
+npm run dev          # Start Next.js dev server at http://localhost:3000
 npm test             # Run all 33 tests
 npm run test:watch   # Jest in watch mode
 npx tsc --noEmit    # Type check without building
 ```
+
+### Database shortcuts
+
+```bash
+npm run db:up        # docker compose up -d
+npm run db:down      # docker compose down (keeps data)
+npm run db:reset     # docker compose down -v && up (wipes all data, re-run seed after)
+npm run db:seed      # npx prisma db seed
+```
+
+### Docker port note
+The container maps **host 5433 → container 5432**. This avoids conflict with any local PostgreSQL instance. Always use port 5433 in the DATABASE_URL on this machine.
 
 ### Demo player (Sprint 1)
 
@@ -255,6 +313,7 @@ lingobeat/
 │   └── lib/
 │       ├── types.ts                    — LyricWord, LyricLine, ParsedLyrics, Song
 │       ├── utils.ts                    — cn() helper (clsx + tailwind-merge)
+│       ├── db.ts                       — Prisma 7 singleton with pg driver adapter
 │       ├── adapters/
 │       │   ├── MediaBridge.ts          — Interface + PlayerState/PlayerEvent types
 │       │   └── HTML5AudioAdapter.ts    — Wraps HTMLAudioElement, implements MediaBridge
@@ -275,8 +334,10 @@ lingobeat/
 │       └── lyrics.test.ts              — 6 tests (@jest-environment node)
 ├── prisma/
 │   ├── schema.prisma                   — User, Song, Lyrics, SongDifficulty models
+│   ├── seed.ts                         — Demo user + Stromae song + lyrics + difficulty
 │   └── migrations/                     — Created after first `prisma migrate dev`
-├── prisma.config.ts                    — Prisma 7 config (DATABASE_URL, schema path)
+├── docker-compose.yml                  — Local PostgreSQL on port 5433
+├── prisma.config.ts                    — Prisma 7 config (DATABASE_URL, migrations path, seed command)
 ├── jest.config.ts                      — next/jest SWC transformer, jsdom, @/ alias
 ├── jest.setup.ts                       — @testing-library/jest-dom, rAF polyfill, Audio mock
 ├── .env                                — DATABASE_URL (gitignored)
@@ -520,7 +581,7 @@ npx jest --no-coverage --watch        # watch mode
 ## Known Limitations (Sprint 1)
 
 - **No auth** — demo page is public, no user sessions
-- **No database queries** — LRC is hardcoded in `page.tsx` demo; DB schema exists but no ORM queries in the UI layer yet
+- **No live DB queries in UI** — LRC is hardcoded in `page.tsx` demo; `src/lib/db.ts` singleton exists and the seed populates demo data, but no route handlers query the DB yet (Sprint 2 wires this up)
 - **HTML5 audio only** — YouTube and Spotify adapters are Sprint 3
 - **Latin script only** — romanization and non-Latin rendering are Sprint 3
 - **ScrollArea + scrollIntoView** — auto-scroll works in most browsers but may need a native `overflow-y-auto` div fallback if `ScrollArea`'s custom viewport blocks `scrollIntoView` in edge cases
