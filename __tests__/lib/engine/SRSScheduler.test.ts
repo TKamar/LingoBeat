@@ -20,12 +20,11 @@ describe('SRSScheduler', () => {
     expect(card.due instanceof Date).toBe(true)
   })
 
-  it('schedule with Again (1) — returns valid next review date', () => {
+  it('schedule with Again (1) — reps incremented to 1 in ts-fsrs v5', () => {
     const card = scheduler.createCard()
     const result = scheduler.schedule(card, 1)
     expect(result.nextReview instanceof Date).toBe(true)
-    // ts-fsrs v5 increments reps for all ratings including Again
-    expect(result.card.reps).toBeGreaterThanOrEqual(0)
+    expect(result.card.reps).toBe(1)
   })
 
   it('schedule with Good (3) — increments reps, positive stability', () => {
@@ -59,5 +58,14 @@ describe('SRSScheduler', () => {
     const serialized = JSON.parse(JSON.stringify(original))
     const restored = scheduler.fromJSON(serialized)
     expect(restored.reps).toBe(original.reps)
+  })
+
+  it('fromJSON on a scheduled card allows subsequent scheduling', () => {
+    const initial = scheduler.createCard()
+    const scheduled = scheduler.schedule(initial, 3)
+    const serialized = JSON.parse(JSON.stringify(scheduled.card))
+    const restored = scheduler.fromJSON(serialized)
+    expect(() => scheduler.schedule(restored, 3)).not.toThrow()
+    expect(restored.reps).toBe(1)
   })
 })

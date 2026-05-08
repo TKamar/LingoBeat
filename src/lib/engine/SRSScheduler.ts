@@ -24,8 +24,10 @@ export class SRSScheduler {
     }
   }
 
+  /** Restores an FsrsCard from JSON.parse output (e.g., from the DB). Returns a new card if state is empty or corrupt. */
   fromJSON(state: Record<string, unknown>): FsrsCard {
     if (!state || Object.keys(state).length === 0) return this.createCard()
+    if (state.state === undefined) return this.createCard()
     return state as unknown as FsrsCard
   }
 }
