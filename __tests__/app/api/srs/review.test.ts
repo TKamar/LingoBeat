@@ -7,6 +7,7 @@ jest.mock('@/lib/db', () => ({
   db: {
     srsCard: { findUnique: jest.fn(), update: jest.fn() },
     reviewLog: { create: jest.fn() },
+    $transaction: jest.fn(),
   },
 }))
 
@@ -50,8 +51,8 @@ describe('POST /api/srs/review', () => {
   it('updates FSRS state and logs the review', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
     db.srsCard.findUnique.mockResolvedValue({ id: 'card-1', user_id: 'user-1', fsrs_state: {} })
-    db.srsCard.update.mockResolvedValue({ id: 'card-1' })
-    db.reviewLog.create.mockResolvedValue({})
+    const mockUpdated = { id: 'card-1' }
+    db.$transaction.mockResolvedValue([mockUpdated, {}])
 
     const req = new NextRequest('http://localhost/api/srs/review', {
       method: 'POST',
@@ -60,8 +61,7 @@ describe('POST /api/srs/review', () => {
     })
     const res = await POST(req)
     expect(res.status).toBe(200)
-    expect(db.srsCard.update).toHaveBeenCalledTimes(1)
-    expect(db.reviewLog.create).toHaveBeenCalledTimes(1)
+    expect(db.$transaction).toHaveBeenCalledTimes(1)
   })
 
   it('returns 400 when card_id is missing', async () => {

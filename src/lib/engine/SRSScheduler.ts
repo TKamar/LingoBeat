@@ -29,6 +29,10 @@ export class SRSScheduler {
   fromJSON(state: Record<string, unknown>): FsrsCard {
     if (!state || Object.keys(state).length === 0) return this.createCard()
     if (state.state === undefined) return this.createCard()
-    return state as unknown as FsrsCard
+    return {
+      ...state,
+      due: new Date(state.due as string),
+      last_review: state.last_review ? new Date(state.last_review as string) : null,
+    } as unknown as FsrsCard
   }
 }

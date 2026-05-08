@@ -22,9 +22,9 @@ export async function POST(req: NextRequest) {
   const currentState = scheduler.fromJSON(card.fsrs_state as Record<string, unknown>)
   const { card: newState, nextReview } = scheduler.schedule(currentState, rating as SrsRating)
 
-  const [updated] = await Promise.all([
+  const [updated] = await db.$transaction([
     db.srsCard.update({
-      where: { id: card_id },
+      where: { id: card_id, user_id: session.user.id },
       data: { fsrs_state: newState as object, next_review_at: nextReview },
     }),
     db.reviewLog.create({ data: { card_id, user_id: session.user.id, rating } }),

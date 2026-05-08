@@ -24,6 +24,12 @@ export async function POST(req: NextRequest) {
   if (!body?.language_code || !body?.word) {
     return NextResponse.json({ error: 'language_code and word are required' }, { status: 400 })
   }
+  if (typeof body.word !== 'string' || typeof body.language_code !== 'string') {
+    return NextResponse.json({ error: 'language_code and word must be strings' }, { status: 400 })
+  }
+  if (body.word.length > 200 || body.language_code.length > 10) {
+    return NextResponse.json({ error: 'word or language_code too long' }, { status: 400 })
+  }
 
   const word = (body.word as string).toLowerCase().trim()
   const language_code = (body.language_code as string).toLowerCase().trim()

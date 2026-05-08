@@ -70,6 +70,16 @@ describe('POST /api/srs/cards', () => {
     expect((await res.json()).word).toBe('dis-moi')
   })
 
+  it('returns 400 when word is a non-string type', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
+    const req = new NextRequest('http://localhost/api/srs/cards', {
+      method: 'POST',
+      body: JSON.stringify({ language_code: 'fr', word: 42 }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect((await POST(req)).status).toBe(400)
+  })
+
   it('normalises word to lowercase before saving', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
     db.srsCard.upsert.mockResolvedValue({ id: 'card-1', word: 'dis-moi', language_code: 'fr' })
