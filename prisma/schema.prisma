@@ -91,7 +91,7 @@ model Song {
   artist        String
   language_code String
   duration_ms   Int
-  media_type    String
+  media_type    String   // 'html5' | 'youtube' | 'spotify'
   media_id      String
   lrclib_id     Int?
   created_at    DateTime @default(now())
@@ -104,6 +104,8 @@ model Song {
 model Lyrics {
   id         String   @id @default(uuid())
   song_id    String   @unique
+  // words: LyricWord[] — { text, romanization, start_ms, end_ms, cefr_level }
+  // lines: LyricLine[] — { lineIndex, start_ms, end_ms, wordStart, wordEnd }
   words      Json
   lines      Json
   created_at DateTime @default(now())
@@ -113,10 +115,10 @@ model Lyrics {
 
 model SongDifficulty {
   song_id          String   @id
-  vocab_cefr       String
+  vocab_cefr       String   // A1–C2
   audio_speed_wpm  Float
-  grammar_score    Float
-  composite_level  String
+  grammar_score    Float    // 1–10
+  composite_level  String   // A1–C2
   computed_at      DateTime @default(now())
 
   song Song @relation(fields: [song_id], references: [id], onDelete: Cascade)
@@ -140,7 +142,10 @@ model SrsCard {
   song       Song?     @relation(fields: [context_song], references: [id])
   reviewLogs ReviewLog[]
 
+  // IMPORTANT: 'word' must be lowercased at the application layer before insert/upsert
+  // to avoid duplicates ('Dis-moi' vs 'dis-moi'). PostgreSQL collation is case-sensitive.
   @@unique([user_id, language_code, word])
+  @@index([user_id, next_review_at])  // review queue: WHERE user_id = ? AND next_review_at <= now()
   @@map("srs_cards")
 }
 
@@ -173,4 +178,5 @@ model VocabCache {
 
   @@unique([language_code, word, context, provider])
   @@map("vocab_cache")
+  @@index([expires_at])   // required for efficient TTL purge jobs
 }
