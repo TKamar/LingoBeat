@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const upstream = await fetch(`${PYTHON_SERVICE_URL}/analyze-word`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ language_code, word, context: context || undefined, provider }),
+      body: JSON.stringify({ language_code, word, context, provider }),
     })
     if (!upstream.ok) {
       return NextResponse.json({ error: 'Analysis service error' }, { status: 502 })
