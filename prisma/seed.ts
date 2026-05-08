@@ -75,6 +75,28 @@ async function main() {
   })
   console.log('  ✓ Difficulty: B1')
 
+  await prisma.srsCard.upsert({
+    where: {
+      user_id_language_code_word: {
+        user_id: user.id,
+        language_code: 'fr',
+        word: 'dis-moi',
+      },
+    },
+    update: {},
+    create: {
+      id: 'a1b2c3d4-0000-0000-0000-000000000010',
+      user_id: user.id,
+      language_code: 'fr',
+      word: 'dis-moi',
+      meaning: 'tell me (imperative)',
+      context_song: DEMO_SONG_ID,
+      fsrs_state: {},
+      next_review_at: new Date(),
+    },
+  })
+  console.log('  ✓ SRS card: dis-moi')
+
   console.log('\nSeed complete.')
 }
 
