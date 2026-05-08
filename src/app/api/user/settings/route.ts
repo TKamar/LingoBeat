@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
-
-const VALID_PROVIDERS = ['haiku', 'sonnet', 'free']
+import { VALID_PROVIDERS } from '@/lib/providers'
 
 export async function GET(_req: NextRequest) {
   const session = await auth()

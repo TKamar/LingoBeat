@@ -6,7 +6,7 @@ jest.mock('@/auth', () => ({ auth: jest.fn() }))
 jest.mock('@/lib/db', () => ({
   db: {
     user: { findUnique: jest.fn() },
-    vocabCache: { findUnique: jest.fn(), create: jest.fn() },
+    vocabCache: { findFirst: jest.fn(), upsert: jest.fn() },
   },
 }))
 
@@ -40,9 +40,9 @@ describe('POST /api/vocab/analyze', () => {
 
   it('uses system default provider when not authenticated', async () => {
     mockAuth.mockResolvedValue(null)
-    db.vocabCache.findUnique.mockResolvedValue(null)
+    db.vocabCache.findFirst.mockResolvedValue(null)
     mockFetch.mockResolvedValue({ ok: true, json: async () => mockAnalysis })
-    db.vocabCache.create.mockResolvedValue({})
+    db.vocabCache.upsert.mockResolvedValue({})
 
     const req = new NextRequest('http://localhost/api/vocab/analyze', {
       method: 'POST',
@@ -59,9 +59,9 @@ describe('POST /api/vocab/analyze', () => {
   it('uses user analysis_provider from DB when authenticated', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
     db.user.findUnique.mockResolvedValue({ analysis_provider: 'free' })
-    db.vocabCache.findUnique.mockResolvedValue(null)
+    db.vocabCache.findFirst.mockResolvedValue(null)
     mockFetch.mockResolvedValue({ ok: true, json: async () => ({ ...mockAnalysis, provider: 'free' }) })
-    db.vocabCache.create.mockResolvedValue({})
+    db.vocabCache.upsert.mockResolvedValue({})
 
     const req = new NextRequest('http://localhost/api/vocab/analyze', {
       method: 'POST',
@@ -77,7 +77,7 @@ describe('POST /api/vocab/analyze', () => {
   it('returns cached analysis without calling Python service', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
     db.user.findUnique.mockResolvedValue({ analysis_provider: 'haiku' })
-    db.vocabCache.findUnique.mockResolvedValue({ analysis: mockAnalysis, is_partial: false })
+    db.vocabCache.findFirst.mockResolvedValue({ analysis: mockAnalysis, is_partial: false })
 
     const req = new NextRequest('http://localhost/api/vocab/analyze', {
       method: 'POST',
@@ -91,8 +91,21 @@ describe('POST /api/vocab/analyze', () => {
 
   it('returns 502 when Python service is unreachable', async () => {
     mockAuth.mockResolvedValue(null)
-    db.vocabCache.findUnique.mockResolvedValue(null)
+    db.vocabCache.findFirst.mockResolvedValue(null)
     mockFetch.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    const req = new NextRequest('http://localhost/api/vocab/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ language_code: 'fr', word: 'dis-moi' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect((await POST(req)).status).toBe(502)
+  })
+
+  it('returns 502 when Python service returns non-ok status', async () => {
+    mockAuth.mockResolvedValue(null)
+    db.vocabCache.findFirst.mockResolvedValue(null)
+    mockFetch.mockResolvedValue({ ok: false, status: 422 })
 
     const req = new NextRequest('http://localhost/api/vocab/analyze', {
       method: 'POST',

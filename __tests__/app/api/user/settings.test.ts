@@ -27,6 +27,14 @@ describe('GET /api/user/settings', () => {
     expect(res.status).toBe(200)
     expect((await res.json()).analysis_provider).toBe('free')
   })
+
+  it('returns haiku default when user record not found', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
+    db.user.findUnique.mockResolvedValue(null)
+    const res = await GET(new NextRequest('http://localhost/api/user/settings'))
+    expect(res.status).toBe(200)
+    expect((await res.json()).analysis_provider).toBe('haiku')
+  })
 })
 
 describe('PATCH /api/user/settings', () => {

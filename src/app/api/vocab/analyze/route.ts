@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { db } from '@/lib/db'
+import { VALID_PROVIDERS, ProviderName } from '@/lib/providers'
 
 const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL ?? 'http://localhost:8000'
-const VALID_PROVIDERS = ['haiku', 'sonnet', 'free'] as const
-type ProviderName = typeof VALID_PROVIDERS[number]
 
 async function getUserProvider(userId: string): Promise<ProviderName> {
   const user = await db.user.findUnique({
@@ -21,19 +20,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'language_code and word are required' }, { status: 400 })
   }
 
-  const { language_code, word, context = '' } = body as {
+  const { context = '' } = body as {
     language_code: string
     word: string
     context?: string
   }
+  const language_code = (body.language_code as string).toLowerCase().trim()
+  const word = (body.word as string).toLowerCase().trim()
 
   const session = await auth()
   const provider: ProviderName = session?.user?.id
     ? await getUserProvider(session.user.id)
     : 'haiku'
 
-  const cached = await db.vocabCache.findUnique({
-    where: { language_code_word_context_provider: { language_code, word, context, provider } },
+  const cached = await db.vocabCache.findFirst({
+    where: {
+      language_code,
+      word,
+      context,
+      provider,
+      expires_at: { gt: new Date() },
+    },
   })
   if (cached) return NextResponse.json({
     ...(cached.analysis as Record<string, unknown>),
@@ -56,8 +63,10 @@ export async function POST(req: NextRequest) {
   }
 
   const is_partial = Boolean(analysis.is_partial)
-  await db.vocabCache.create({
-    data: { language_code, word, context, provider, is_partial, analysis: analysis as object },
+  await db.vocabCache.upsert({
+    where: { language_code_word_context_provider: { language_code, word, context, provider } },
+    update: { analysis: analysis as object, is_partial },
+    create: { language_code, word, context, provider, is_partial, analysis: analysis as object },
   })
 
   return NextResponse.json(analysis)
