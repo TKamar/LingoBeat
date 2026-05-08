@@ -12,12 +12,14 @@ datasource db {
 // ── Core users ─────────────────────────────────────────────────────────────────
 
 model User {
-  id                String   @id @default(uuid())
-  email             String   @unique
+  id                String    @id @default(uuid())
+  email             String    @unique
   name              String?
-  native_lang       String   @default("en")
-  analysis_provider String   @default("haiku")  // "haiku" | "sonnet" | "free"
-  created_at        DateTime @default(now())
+  emailVerified     DateTime?
+  image             String?
+  native_lang       String    @default("en")
+  analysis_provider String    @default("haiku")  // "haiku" | "sonnet" | "free"
+  created_at        DateTime  @default(now())
 
   accounts         Account[]
   sessions         Session[]

@@ -10,7 +10,7 @@ export default function LoginPage() {
       <form
         action={async () => {
           'use server'
-          await signIn('google', { redirectTo: '/player/demo' })
+          await signIn('google')
         }}
       >
         <button
