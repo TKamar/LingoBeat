@@ -1,0 +1,31 @@
+import { createEmptyCard, fsrs, Rating, type Card as FsrsCard } from 'ts-fsrs'
+
+export type { FsrsCard }
+export type SrsRating = 1 | 2 | 3 | 4  // Again | Hard | Good | Easy
+
+export interface ScheduleResult {
+  card: FsrsCard
+  nextReview: Date
+}
+
+export class SRSScheduler {
+  private f = fsrs()
+
+  createCard(): FsrsCard {
+    return createEmptyCard()
+  }
+
+  schedule(card: FsrsCard, rating: SrsRating): ScheduleResult {
+    const results = this.f.repeat(card, new Date())
+    const scheduled = results[rating as Rating]
+    return {
+      card: scheduled.card,
+      nextReview: scheduled.card.due,
+    }
+  }
+
+  fromJSON(state: Record<string, unknown>): FsrsCard {
+    if (!state || Object.keys(state).length === 0) return this.createCard()
+    return state as unknown as FsrsCard
+  }
+}
