@@ -17,7 +17,8 @@ export class SRSScheduler {
 
   schedule(card: FsrsCard, rating: SrsRating): ScheduleResult {
     const results = this.f.repeat(card, new Date())
-    const scheduled = results[rating as Rating]
+    // SrsRating is 1–4 (Again/Hard/Good/Easy); Rating.Manual=0 is excluded, so the cast is safe
+    const scheduled = results[rating as Rating.Again | Rating.Hard | Rating.Good | Rating.Easy]
     return {
       card: scheduled.card,
       nextReview: scheduled.card.due,
