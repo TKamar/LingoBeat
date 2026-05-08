@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lingobeat
+      POSTGRES_PASSWORD: lingobeat
+      POSTGRES_DB: lingobeat
+      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_INITDB_ARGS: "--auth-host=md5"
+    ports:
+      - "5433:5432"   # host:container — avoids conflict with any local postgres on 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lingobeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  python-service:
+    build:
+      context: ./python-service
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANALYSIS_PROVIDER: ${ANALYSIS_PROVIDER:-haiku}
+    restart: unless-stopped
+
+volumes:
+  pgdata:
