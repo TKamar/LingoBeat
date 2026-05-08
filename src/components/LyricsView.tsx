@@ -1,12 +1,22 @@
 'use client'
-import { useCallback, useEffect, useRef } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import { useSyncStore } from '@/lib/stores/useSyncStore'
 import { useSongStore } from '@/lib/stores/useSongStore'
 import { usePlayerStore } from '@/lib/stores/usePlayerStore'
 import { WordToken } from './WordToken'
+import { WordPopover } from './WordPopover'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import type { LyricWord } from '@/lib/types'
 
-export function LyricsView() {
+interface Props {
+  languageCode: string
+  onWordTap: (word: LyricWord) => void
+  selectedWord: LyricWord | null
+  onWordClose: () => void
+  onWordSaved: (word: string) => void
+}
+
+export function LyricsView({ languageCode, onWordTap, selectedWord, onWordClose, onWordSaved }: Props) {
   const lyricsData = useSongStore(s => s.lyrics)
   const { words, lines } = lyricsData ?? { words: [], lines: [] }
   const activeWordIndex = useSyncStore(s => s.activeWordIndex)
@@ -31,26 +41,42 @@ export function LyricsView() {
   return (
     <ScrollArea className="h-[60vh] w-full px-4">
       <div className="space-y-4 py-8">
-        {lines.map(line => (
-          <div
-            key={line.lineIndex}
-            ref={line.lineIndex === activeLineIndex ? activeLineRef : null}
-            className="flex flex-wrap gap-x-2 gap-y-1"
-          >
-            {words.slice(line.wordStart, line.wordEnd).map((word, j) => {
-              const wordIdx = line.wordStart + j
-              return (
-                <WordToken
-                  key={wordIdx}
-                  word={word}
-                  index={wordIdx}
-                  isActive={wordIdx === activeWordIndex}
-                  onSeek={handleSeek}
+        {lines.map(line => {
+          const lineWords = words.slice(line.wordStart, line.wordEnd)
+          const lineHasSelected = selectedWord != null &&
+            lineWords.some(w => w.start_ms === selectedWord.start_ms)
+
+          return (
+            <React.Fragment key={line.lineIndex}>
+              <div
+                ref={line.lineIndex === activeLineIndex ? activeLineRef : null}
+                className="flex flex-wrap gap-x-2 gap-y-1"
+              >
+                {lineWords.map((word, j) => {
+                  const wordIdx = line.wordStart + j
+                  return (
+                    <WordToken
+                      key={wordIdx}
+                      word={word}
+                      index={wordIdx}
+                      isActive={wordIdx === activeWordIndex}
+                      onSeek={handleSeek}
+                      onTap={onWordTap}
+                    />
+                  )
+                })}
+              </div>
+              {lineHasSelected && (
+                <WordPopover
+                  word={selectedWord}
+                  languageCode={languageCode}
+                  onClose={onWordClose}
+                  onSaved={onWordSaved}
                 />
-              )
-            })}
-          </div>
-        ))}
+              )}
+            </React.Fragment>
+          )
+        })}
       </div>
     </ScrollArea>
   )

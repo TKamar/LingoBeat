@@ -8,12 +8,17 @@ interface Props {
   index: number
   isActive: boolean
   onSeek: (ms: number) => void
+  onTap: (word: LyricWord) => void
 }
 
-export const WordToken = React.memo(function WordToken({ word, index, isActive, onSeek }: Props) {
+export const WordToken = React.memo(function WordToken({ word, index, isActive, onSeek, onTap }: Props) {
+  function handleClick() {
+    onSeek(word.start_ms)
+    onTap(word)
+  }
   return (
     <span
-      onClick={() => onSeek(word.start_ms)}
+      onClick={handleClick}
       className={cn(
         'inline-block px-0.5 rounded cursor-pointer transition-colors duration-75',
         'hover:text-blue-400',
