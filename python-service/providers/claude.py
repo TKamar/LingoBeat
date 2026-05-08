@@ -26,14 +26,22 @@ Return ONLY valid JSON. No markdown, no code blocks."""
 
 class ClaudeProvider(WordAnalysisProvider):
     """
-    Pro-tier provider using Anthropic Claude models.
+    Pro-tier provider using Anthropic Claude models (async client, non-blocking).
     Instantiate with different model IDs to register haiku, sonnet, etc.
+    ANTHROPIC_API_KEY must be set at runtime; missing key defers error to first analyze() call.
     """
 
     def __init__(self, model: str, name: str) -> None:
         self._model = model
         self._name = name
-        self._client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self._api_key = os.getenv("ANTHROPIC_API_KEY")
+
+    def _get_client(self) -> anthropic.AsyncAnthropic:
+        if not self._api_key:
+            raise RuntimeError(
+                f"ANTHROPIC_API_KEY is not set. Provider '{self._name}' requires it."
+            )
+        return anthropic.AsyncAnthropic(api_key=self._api_key)
 
     @property
     def name(self) -> str:
@@ -48,7 +56,8 @@ class ClaudeProvider(WordAnalysisProvider):
         context_line = f'Sentence context: "{context}"' if context else ""
         prompt = _PROMPT.format(language=language, word=word, context_line=context_line)
 
-        message = self._client.messages.create(
+        client = self._get_client()
+        message = await client.messages.create(
             model=self._model,
             max_tokens=512,
             messages=[{"role": "user", "content": prompt}],

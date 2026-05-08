@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class WordAnalysis(BaseModel):
     ipa: str
     meaning: str
-    register: str           # "formal" | "neutral" | "informal" | "slang" | "vulgar"
+    register: Literal["formal", "neutral", "informal", "slang", "vulgar"]
     slang_notes: str | None
     examples: list[str]
     provider: str           # which provider produced this result

@@ -25,9 +25,6 @@ services:
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       ANALYSIS_PROVIDER: ${ANALYSIS_PROVIDER:-haiku}
-    depends_on:
-      postgres:
-        condition: service_healthy
     restart: unless-stopped
 
 volumes:

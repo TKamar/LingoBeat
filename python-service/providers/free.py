@@ -52,7 +52,8 @@ class FreeProvider(WordAnalysisProvider):
                 with_stress=True,
                 preserve_punctuation=False,
             )
-            return f"/{result.strip()}/"
+            stripped = result.strip()
+            return f"/{stripped}/" if stripped else f"/{word}/"
         except Exception:
             return f"/{word}/"  # graceful fallback
 
