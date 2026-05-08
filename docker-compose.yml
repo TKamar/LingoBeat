@@ -17,5 +17,18 @@ services:
       timeout: 5s
       retries: 5
 
+  python-service:
+    build:
+      context: ./python-service
+    ports:
+      - "8000:8000"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANALYSIS_PROVIDER: ${ANALYSIS_PROVIDER:-haiku}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata:
