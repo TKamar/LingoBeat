@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { BottomNav } from "@/components/BottomNav";
+import { AnimatePresence } from "framer-motion";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,7 +30,14 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col"><Providers>{children}</Providers></body>
+      <body className="min-h-full flex flex-col">
+        <Providers>
+          <AnimatePresence mode="wait">
+            <div className="flex-1 pb-16">{children}</div>
+          </AnimatePresence>
+          <BottomNav />
+        </Providers>
+      </body>
     </html>
   );
 }

@@ -27,6 +27,18 @@ model User {
   languageProfiles UserLanguageProfile[]
   srsCards         SrsCard[]
   reviewLogs       ReviewLog[]
+  preference       UserPreference?
+}
+
+model UserPreference {
+  id              String   @id @default(uuid())
+  user_id         String   @unique
+  user            User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  target_language String   @default("fr")
+  daily_goal_xp   Int      @default(20)
+  onboarding_done Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
 
 // NextAuth.js v5 adapter tables
