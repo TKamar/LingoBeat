@@ -62,7 +62,8 @@ describe('PATCH /api/user/settings', () => {
 
   it('updates analysis_provider and returns updated settings', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
-    db.user.update.mockResolvedValue({ analysis_provider: 'free' })
+    db.user.findUnique.mockResolvedValue({ role: 'admin' })
+    db.user.update.mockResolvedValue({ analysis_provider: 'free', role: 'admin' })
     const req = new NextRequest('http://localhost/api/user/settings', {
       method: 'PATCH',
       body: JSON.stringify({ analysis_provider: 'free' }),
@@ -74,6 +75,7 @@ describe('PATCH /api/user/settings', () => {
     expect(db.user.update).toHaveBeenCalledWith({
       where: { id: 'user-1' },
       data: { analysis_provider: 'free' },
+      select: { analysis_provider: true, role: true },
     })
   })
 })

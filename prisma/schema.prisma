@@ -19,6 +19,7 @@ model User {
   image             String?
   native_lang       String    @default("en")
   analysis_provider String    @default("haiku")  // "haiku" | "sonnet" | "free"
+  role              String    @default("user")   // "user" | "pro" | "admin"
   created_at        DateTime  @default(now())
 
   accounts         Account[]
