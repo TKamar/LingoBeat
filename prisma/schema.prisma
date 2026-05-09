@@ -39,6 +39,8 @@ model UserPreference {
   onboarding_done Boolean  @default(false)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
+
+  @@map("user_preferences")
 }
 
 // NextAuth.js v5 adapter tables

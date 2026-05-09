@@ -26,6 +26,16 @@ export async function PATCH(req: NextRequest) {
     if (key in body) data[key] = body[key]
   }
 
+  if ('daily_goal_xp' in data && (typeof data.daily_goal_xp !== 'number' || !Number.isInteger(data.daily_goal_xp) || (data.daily_goal_xp as number) < 1)) {
+    return NextResponse.json({ error: 'daily_goal_xp must be a positive integer' }, { status: 400 })
+  }
+  if ('target_language' in data && typeof data.target_language !== 'string') {
+    return NextResponse.json({ error: 'target_language must be a string' }, { status: 400 })
+  }
+  if ('onboarding_done' in data && typeof data.onboarding_done !== 'boolean') {
+    return NextResponse.json({ error: 'onboarding_done must be a boolean' }, { status: 400 })
+  }
+
   const pref = await db.userPreference.upsert({
     where: { user_id: session.user.id },
     update: data,

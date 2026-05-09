@@ -51,6 +51,16 @@ describe('GET /api/user/preferences', () => {
 describe('PATCH /api/user/preferences', () => {
   beforeEach(() => jest.clearAllMocks())
 
+  it('returns 401 when not authenticated', async () => {
+    mockAuth.mockResolvedValue(null)
+    const req = new NextRequest('http://localhost/api/user/preferences', {
+      method: 'PATCH',
+      body: JSON.stringify({ target_language: 'fr' }),
+    })
+    const res = await PATCH(req)
+    expect(res.status).toBe(401)
+  })
+
   it('updates preference and returns updated record', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } })
     db.userPreference.upsert.mockResolvedValue({
