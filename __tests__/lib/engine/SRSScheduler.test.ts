@@ -53,11 +53,12 @@ describe('SRSScheduler', () => {
     expect(card.reps).toBe(0)
   })
 
-  it('fromJSON on serialized state restores the card', () => {
+  it('fromJSON on serialized state restores the card with rehydrated dates', () => {
     const original = scheduler.createCard()
     const serialized = JSON.parse(JSON.stringify(original))
     const restored = scheduler.fromJSON(serialized)
     expect(restored.reps).toBe(original.reps)
+    expect(restored.due instanceof Date).toBe(true)
   })
 
   it('fromJSON on a scheduled card allows subsequent scheduling', () => {

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LingoBeat — Choose Your Language</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #07070f;
+    --s1:        #0e0e1c;
+    --s2:        #16162a;
+    --border:    rgba(255,255,255,0.07);
+    --accent:    #5b73ff;
+    --accent2:   #9b6dff;
+    --glow:      rgba(91,115,255,0.25);
+    --text:      #f0f0f8;
+    --muted:     #7777a0;
+    --gold:      #f5a623;
+    --green:     #1dd9a0;
+    --r:         14px;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── Animated background mesh ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 15% 60%, rgba(79,52,212,.14) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 85% 20%, rgba(37,99,235,.10) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 100%, rgba(155,109,255,.08) 0%, transparent 60%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+  }
+  @keyframes bgPulse {
+    from { opacity: .8; transform: scale(1); }
+    to   { opacity: 1;  transform: scale(1.03); }
+  }
+
+  /* grain overlay */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    opacity: .4;
+    pointer-events: none;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 36px 24px 48px;
+    display: flex; flex-direction: column; gap: 0;
+  }
+
+  /* ── Step indicators ── */
+  .steps {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 44px;
+  }
+  .step-dot {
+    width: 8px; height: 8px; border-radius: 99px;
+    background: var(--border);
+    transition: all .35s ease;
+  }
+  .step-dot.active {
+    width: 28px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .step-dot.done { background: rgba(91,115,255,.3); }
+  .step-label {
+    font-size: 12px; color: var(--muted); margin-left: 6px;
+    letter-spacing: .04em;
+  }
+
+  /* ── Headline ── */
+  .headline {
+    margin-bottom: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(26px, 7vw, 34px);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -.02em;
+    background: linear-gradient(135deg, #fff 30%, rgba(155,109,255,.8) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subhead {
+    font-size: 15px; color: var(--muted); margin-bottom: 36px;
+    font-weight: 300; line-height: 1.5;
+  }
+
+  /* ── Language grid ── */
+  .lang-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .lang-grid-row2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: calc(75% - 2.5px);
+    margin: 0 auto 32px;
+  }
+
+  /* ── Language card ── */
+  .lang-card {
+    position: relative;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px 8px 14px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    cursor: pointer;
+    transition: transform .22s cubic-bezier(.34,1.56,.64,1),
+                border-color .22s ease,
+                box-shadow .22s ease,
+                background .22s ease;
+    animation: cardIn .5s ease both;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    backdrop-filter: blur(8px);
+  }
+  .lang-card:nth-child(1) { animation-delay: .05s; }
+  .lang-card:nth-child(2) { animation-delay: .10s; }
+  .lang-card:nth-child(3) { animation-delay: .15s; }
+  .lang-card:nth-child(4) { animation-delay: .20s; }
+  .lang-grid-row2 .lang-card:nth-child(1) { animation-delay: .25s; }
+  .lang-grid-row2 .lang-card:nth-child(2) { animation-delay: .30s; }
+  .lang-grid-row2 .lang-card:nth-child(3) { animation-delay: .35s; }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .lang-card:hover:not(.selected) {
+    transform: translateY(-3px) scale(1.03);
+    border-color: rgba(91,115,255,.3);
+    box-shadow: 0 10px 28px rgba(91,115,255,.12);
+    background: rgba(91,115,255,.06);
+  }
+
+  .lang-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 12px 32px var(--glow), inset 0 0 20px rgba(91,115,255,.08);
+    background: rgba(91,115,255,.1);
+    transform: scale(1.04);
+  }
+
+  /* selected gradient border */
+  .lang-card.selected::before {
+    content: '';
+    position: absolute; inset: -1px;
+    border-radius: calc(var(--r) + 1px);
+    padding: 1px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .lang-card .check {
+    position: absolute; top: 7px; right: 7px;
+    width: 18px; height: 18px;
+    background: var(--accent);
+    border-radius: 99px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transform: scale(0);
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .lang-card.selected .check {
+    opacity: 1; transform: scale(1);
+  }
+  .check svg { width: 10px; height: 10px; }
+
+  .flag { font-size: 26px; line-height: 1; }
+  .lang-native {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .lang-name {
+    font-size: 10px; color: var(--muted); font-weight: 400;
+    text-align: center;
+  }
+  .lang-songs {
+    font-size: 9px;
+    color: rgba(91,115,255,.8);
+    font-weight: 500;
+    letter-spacing: .03em;
+  }
+
+  /* ── Continue button ── */
+  .cta-wrap {
+    margin-top: auto;
+    display: flex; flex-direction: column; gap: 12px;
+    animation: slideUp .5s .4s ease both;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .cta-btn {
+    width: 100%;
+    padding: 17px;
+    border: none; border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px; font-weight: 600;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all .28s cubic-bezier(.34,1.56,.64,1);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    color: #fff;
+    box-shadow: 0 8px 24px var(--glow);
+    letter-spacing: .01em;
+  }
+  .cta-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.15) 50%, transparent 100%);
+    transform: translateX(-100%);
+    animation: shimmer 2.4s infinite .8s;
+  }
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(200%); }
+  }
+  .cta-btn:disabled {
+    background: rgba(255,255,255,.07);
+    color: var(--muted);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .cta-btn:disabled::after { display: none; }
+  .cta-btn:not(:disabled):hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 32px var(--glow);
+  }
+  .cta-btn:not(:disabled):active {
+    transform: scale(.97);
+  }
+
+  .skip-btn {
+    background: none; border: none;
+    color: var(--muted); font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; text-align: center; padding: 4px;
+    transition: color .2s;
+    letter-spacing: .02em;
+  }
+  .skip-btn:hover { color: var(--text); }
+
+  /* ── Logo ── */
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 800;
+    letter-spacing: -.02em;
+    margin-bottom: 36px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeIn .4s ease;
+  }
+  .logo span { -webkit-text-fill-color: var(--text); }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 380px) {
+    .lang-grid { grid-template-columns: repeat(2, 1fr); }
+    .lang-grid-row2 { width: 100%; grid-template-columns: repeat(3, 1fr); }
+    .lang-card { padding: 14px 6px 12px; }
+    .flag { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="logo">Lingo<span>Beat</span></div>
+
+  <div class="steps">
+    <div class="step-dot active"></div>
+    <div class="step-dot"></div>
+    <div class="step-dot"></div>
+    <span class="step-label">Step 1 of 3</span>
+  </div>
+
+  <h1 class="headline">What language do you want to learn?</h1>
+  <p class="subhead">Thousands of songs. One word at a time.</p>
+
+  <!-- Row 1: 4 cards -->
+  <div class="lang-grid" id="row1">
+    <div class="lang-card" data-code="en" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇬🇧</div>
+      <div class="lang-native">English</div>
+      <div class="lang-name">English</div>
+      <div class="lang-songs">2,400+ songs</div>
+    </div>
+    <div class="lang-card" data-code="es" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇪🇸</div>
+      <div class="lang-native">Español</div>
+      <div class="lang-name">Spanish</div>
+      <div class="lang-songs">1,800+ songs</div>
+    </div>
+    <div class="lang-card" data-code="ja" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇯🇵</div>
+      <div class="lang-native">日本語</div>
+      <div class="lang-name">Japanese</div>
+      <div class="lang-songs">980+ songs</div>
+    </div>
+    <div class="lang-card" data-code="ru" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇷🇺</div>
+      <div class="lang-native">Русский</div>
+      <div class="lang-name">Russian</div>
+      <div class="lang-songs">540+ songs</div>
+    </div>
+  </div>
+
+  <!-- Row 2: 3 cards centered -->
+  <div class="lang-grid-row2" id="row2">
+    <div class="lang-card" data-code="fr" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇫🇷</div>
+      <div class="lang-native">Français</div>
+      <div class="lang-name">French</div>
+      <div class="lang-songs">1,200+ songs</div>
+    </div>
+    <div class="lang-card" data-code="ar" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇸🇦</div>
+      <div class="lang-native">العربية</div>
+      <div class="lang-name">Arabic</div>
+      <div class="lang-songs">430+ songs</div>
+    </div>
+    <div class="lang-card" data-code="zh" onclick="selectLang(this)">
+      <div class="check"><svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="flag">🇨🇳</div>
+      <div class="lang-native">中文</div>
+      <div class="lang-name">Chinese</div>
+      <div class="lang-songs">620+ songs</div>
+    </div>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="cta-btn" id="ctaBtn" disabled>Continue →</button>
+    <button class="skip-btn">Already have an account? Sign in</button>
+  </div>
+
+</div>
+
+<script>
+  let selected = null;
+  function selectLang(card) {
+    if (selected) selected.classList.remove('selected');
+    selected = card;
+    card.classList.add('selected');
+    document.getElementById('ctaBtn').disabled = false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LingoBeat — Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #07070f;
+    --s1:      #0f0f1c;
+    --s2:      #181828;
+    --border:  rgba(255,255,255,0.07);
+    --accent:  #5b73ff;
+    --accent2: #9b6dff;
+    --glow:    rgba(91,115,255,0.22);
+    --text:    #f0f0f8;
+    --muted:   #7777a0;
+    --gold:    #f5a623;
+    --green:   #1dd9a0;
+    --red:     #ff5e5e;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 20%, rgba(91,115,255,.09) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .screen {
+    position: relative; z-index: 1;
+    max-width: 420px; margin: 0 auto;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    padding: 48px 24px 48px;
+  }
+
+  /* ── Header row ── */
+  .header-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+    animation: fadeIn .4s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .close-btn {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--s1); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 14px; color: var(--muted);
+    transition: all .2s;
+  }
+  .close-btn:hover { background: var(--s2); color: var(--text); }
+
+  .session-info { text-align: center; }
+  .session-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: -.01em;
+  }
+  .session-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .xp-badge {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(245,166,35,.12);
+    border: 1px solid rgba(245,166,35,.2);
+    border-radius: 99px; padding: 6px 12px;
+    font-size: 13px; font-weight: 600;
+    color: var(--gold);
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    margin-bottom: 28px;
+    animation: fadeIn .4s .05s ease both;
+  }
+  .progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-bottom: 8px;
+  }
+  .progress-bg {
+    height: 6px; background: rgba(255,255,255,.07);
+    border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .6s ease;
+  }
+
+  /* ── Lyric card ── */
+  .lyric-card {
+    background: var(--s1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3);
+    transition: transform .3s ease, box-shadow .3s ease;
+    animation: cardIn .45s .1s cubic-bezier(.34,1.56,.64,1) both;
+    position: relative; overflow: hidden;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(24px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Flash overlays */
+  .card-flash {
+    position: absolute; inset: 0; border-radius: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity .15s ease;
+  }
+  .card-flash.correct { background: rgba(29,217,160,.15); }
+  .card-flash.wrong { background: rgba(255,94,94,.12); }
+  .lyric-card.flash-correct .card-flash.correct { opacity: 1; }
+  .lyric-card.flash-wrong .card-flash.wrong { opacity: 1; }
+  .lyric-card.flash-correct { border-color: rgba(29,217,160,.4); }
+  .lyric-card.flash-wrong { border-color: rgba(255,94,94,.35); animation: shake .4s ease; }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+
+  .card-context {
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .card-context-flag { font-size: 14px; }
+
+  .lyric-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px; font-weight: 700;
+    line-height: 1.3; letter-spacing: -.01em;
+    margin-bottom: 20px;
+  }
+  .lyric-blank {
+    display: inline-block;
+    min-width: 80px;
+    border-bottom: 3px solid var(--accent);
+    color: transparent;
+    background: rgba(91,115,255,.15);
+    border-radius: 4px;
+    padding: 0 4px;
+    margin: 0 4px;
+    transition: all .2s;
+    vertical-align: baseline;
+  }
+  .lyric-blank.filled {
+    color: var(--accent);
+    background: rgba(91,115,255,.2);
+    border-color: var(--accent);
+  }
+  .lyric-blank.correct-fill {
+    color: var(--green);
+    background: rgba(29,217,160,.15);
+    border-color: var(--green);
+  }
+  .lyric-blank.wrong-fill {
+    color: var(--red);
+    background: rgba(255,94,94,.1);
+    border-color: var(--red);
+    text-decoration: line-through;
+  }
+
+  .song-credit {
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .song-credit strong { color: rgba(240,240,248,.6); font-weight: 500; }
+
+  /* ── Answer choices ── */
+  .choices {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 24px;
+    animation: fadeUp .4s .18s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .choice-btn {
+    background: var(--s1);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: rgba(91,115,255,.4);
+    background: rgba(91,115,255,.06);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(91,115,255,.1);
+  }
+  .choice-btn:active:not(:disabled) { transform: scale(.97); }
+
+  .choice-key {
+    width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    background: rgba(255,255,255,.07); color: var(--muted);
+  }
+  .choice-text { font-size: 15px; font-weight: 500; }
+
+  /* States after answering */
+  .choice-btn.correct-choice {
+    border-color: var(--green);
+    background: rgba(29,217,160,.1);
+    box-shadow: 0 0 20px rgba(29,217,160,.15);
+    transform: scale(1.02);
+  }
+  .choice-btn.correct-choice .choice-key {
+    background: var(--green); color: #000;
+  }
+  .choice-btn.wrong-choice {
+    border-color: var(--red);
+    background: rgba(255,94,94,.08);
+  }
+  .choice-btn.wrong-choice .choice-key {
+    background: var(--red); color: #fff;
+  }
+  .choice-btn:disabled { cursor: default; opacity: .7; }
+  .choice-btn:disabled:not(.correct-choice):not(.wrong-choice) {
+    opacity: .35;
+  }
+
+  /* ── XP earned popup ── */
+  .xp-popup {
+    position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%);
+    font-family: 'Syne', sans-serif;
+    font-size: 36px; font-weight: 800;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(245,166,35,.6);
+    pointer-events: none;
+    opacity: 0;
+    z-index: 100;
+  }
+  .xp-popup.show {
+    animation: xpFloat 1.2s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes xpFloat {
+    0%   { opacity: 0; transform: translate(-50%,-30%) scale(.5); }
+    20%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+    60%  { opacity: 1; transform: translate(-50%,-65%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%,-90%) scale(.9); }
+  }
+
+  /* ── Skip / hint row ── */
+  .action-row {
+    display: flex; justify-content: center; gap: 16px;
+    animation: fadeUp .4s .24s ease both;
+  }
+  .hint-btn, .skip-btn {
+    background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--muted);
+    cursor: pointer; padding: 8px 12px; border-radius: 8px;
+    transition: all .2s;
+  }
+  .hint-btn:hover { color: var(--gold); background: rgba(245,166,35,.07); }
+  .skip-btn:hover { color: var(--text); background: rgba(255,255,255,.05); }
+
+  /* ── Confetti particles ── */
+  .particle {
+    position: fixed; pointer-events: none; z-index: 99;
+    width: 8px; height: 8px; border-radius: 2px;
+    animation: fall 1s ease-in both;
+  }
+  @keyframes fall {
+    from { opacity: 1; transform: translateY(0) rotate(0); }
+    to   { opacity: 0; transform: translateY(120px) rotate(480deg); }
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header-row">
+    <div class="close-btn">✕</div>
+    <div class="session-info">
+      <div class="session-title">French Review</div>
+      <div class="session-sub">Papaoutai — Stromae</div>
+    </div>
+    <div class="xp-badge" id="xpBadge">⚡ 12 XP</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span>Card 3 of 7</span>
+      <span id="pctLabel">43%</span>
+    </div>
+    <div class="progress-bg">
+      <div class="progress-fill" id="progressFill" style="width:43%"></div>
+    </div>
+  </div>
+
+  <!-- Lyric card -->
+  <div class="lyric-card" id="lyricCard">
+    <div class="card-flash correct"></div>
+    <div class="card-flash wrong"></div>
+
+    <div class="card-context">
+      <span class="card-context-flag">🇫🇷</span>
+      Fill in the blank
+    </div>
+
+    <div class="lyric-text">
+      Dis-moi <span class="lyric-blank" id="theBlank">___</span> on va
+    </div>
+
+    <div class="song-credit">
+      🎵 <strong>Papaoutai</strong> · Stromae
+    </div>
+  </div>
+
+  <!-- Answer choices -->
+  <div class="choices" id="choices">
+    <button class="choice-btn" data-answer="wrong" onclick="answer(this)">
+      <span class="choice-key">A</span>
+      <span class="choice-text">comment</span>
+    </button>
+    <button class="choice-btn" data-answer="correct" onclick="answer(this)">
+      <span class="choice-key">B</span>
+      <span class="choice-text">où</span>
+    </button>
+    <button class="choice-btn" data-answer="wrong" onclick="answer(this)">
+      <span class="choice-key">C</span>
+      <span class="choice-text">jamais</span>
+    </button>
+    <button class="choice-btn" data-answer="wrong" onclick="answer(this)">
+      <span class="choice-key">D</span>
+      <span class="choice-text">papa</span>
+    </button>
+  </div>
+
+  <!-- Hint / Skip -->
+  <div class="action-row">
+    <button class="hint-btn" onclick="showHint()">💡 Hint</button>
+    <button class="skip-btn">Skip →</button>
+  </div>
+
+</div>
+
+<!-- XP popup -->
+<div class="xp-popup" id="xpPopup">+3 XP</div>
+
+<script>
+  let answered = false;
+  let xp = 12;
+
+  function answer(btn) {
+    if (answered) return;
+    answered = true;
+
+    const card = document.getElementById('lyricCard');
+    const blank = document.getElementById('theBlank');
+    const isCorrect = btn.dataset.answer === 'correct';
+
+    // Disable all buttons
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = true;
+      if (b.dataset.answer === 'correct') b.classList.add('correct-choice');
+    });
+
+    if (isCorrect) {
+      btn.classList.add('correct-choice');
+      blank.textContent = 'où';
+      blank.classList.add('correct-fill');
+      card.classList.add('flash-correct');
+      showXPPopup('+3 XP', 3);
+      launchConfetti();
+    } else {
+      btn.classList.add('wrong-choice');
+      blank.textContent = 'où';
+      blank.classList.add('wrong-fill');
+      // show correct
+      document.querySelector('[data-answer="correct"]').classList.add('correct-choice');
+      card.classList.add('flash-wrong');
+    }
+
+    // Auto-advance after 1.8s
+    setTimeout(() => nextCard(), 1800);
+  }
+
+  function showXPPopup(text, amount) {
+    const popup = document.getElementById('xpPopup');
+    popup.textContent = text;
+    popup.classList.remove('show');
+    void popup.offsetWidth;
+    popup.classList.add('show');
+
+    xp += amount;
+    document.getElementById('xpBadge').textContent = `⚡ ${xp} XP`;
+  }
+
+  function showHint() {
+    document.getElementById('theBlank').textContent = 'o__';
+    document.getElementById('theBlank').classList.add('filled');
+  }
+
+  function launchConfetti() {
+    const colors = ['#5b73ff','#9b6dff','#f5a623','#1dd9a0','#fb923c'];
+    for (let i = 0; i < 22; i++) {
+      setTimeout(() => {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = (35 + Math.random() * 30) + 'vw';
+        p.style.top = (30 + Math.random() * 20) + 'vh';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.animationDelay = (Math.random() * .3) + 's';
+        p.style.transform = `rotate(${Math.random()*180}deg)`;
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1200);
+      }, i * 25);
+    }
+  }
+
+  function nextCard() {
+    // Simulate moving to next card (just reset for demo)
+    answered = false;
+    const card = document.getElementById('lyricCard');
+    card.classList.remove('flash-correct','flash-wrong');
+
+    const blank = document.getElementById('theBlank');
+    blank.textContent = '___';
+    blank.className = 'lyric-blank';
+
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      b.disabled = false;
+      b.classList.remove('correct-choice','wrong-choice');
+    });
+
+    // Advance progress
+    const fills = [43, 57, 71, 86, 100];
+    const current = parseFloat(document.getElementById('progressFill').style.width);
+    const idx = fills.findIndex(f => f > current);
+    const next = fills[idx] ?? 100;
+    document.getElementById('progressFill').style.width = next + '%';
+    document.getElementById('pctLabel').textContent = next + '%';
+
+    // Slide card in
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = 'cardIn .45s cubic-bezier(.34,1.56,.64,1) both';
+  }
+</script>
+</body>
+</html>
