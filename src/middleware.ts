@@ -8,12 +8,14 @@ export default auth((req) => {
   if (!isLoggedIn && (
     path.startsWith('/deck') ||
     path.startsWith('/review') ||
-    path.startsWith('/admin')
+    path.startsWith('/admin') ||
+    path.startsWith('/onboarding') ||
+    path.startsWith('/profile')
   )) {
     return NextResponse.redirect(new URL('/login', req.nextUrl))
   }
 })
 
 export const config = {
-  matcher: ['/deck/:path*', '/review/:path*', '/admin/:path*'],
+  matcher: ['/deck/:path*', '/review/:path*', '/admin/:path*', '/onboarding/:path*', '/profile/:path*'],
 }
