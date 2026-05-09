@@ -1,9 +1,9 @@
 # LingoBeat Sprint 2 — Development Progress
 
-> **Last updated:** 2026-05-08  
-> **Branch:** `feature/sprint2-ui` (all work) → merge to `sprint-2` → `main`  
+> **Last updated:** 2026-05-09  
+> **Branch:** `feature/sprint2-ui` merged → `sprint-2`; `feature/local-dev-infra` pushed  
 > **GitHub:** [github.com/TKamar/LingoBeat](https://github.com/TKamar/LingoBeat)  
-> **Status:** ✅ ALL 9 TASKS COMPLETE — 71 tests passing, 0 TypeScript errors
+> **Status:** ✅ SPRINT 2 + LOCAL DEV INFRA COMPLETE — 71 tests passing, 0 TypeScript errors
 
 ---
 
@@ -186,12 +186,38 @@ lingobeat/
 
 ---
 
+## Local Dev Infrastructure (feature/local-dev-infra)
+
+Built on top of Sprint 2, this branch adds everything needed to run the app locally without Google OAuth:
+
+| Item | Detail |
+|---|---|
+| `role` field on User | `"user"` / `"pro"` / `"admin"` — gates provider access |
+| 3 demo users | `user@test.dev` (free), `pro@test.dev` (haiku), `admin@test.dev` (all) |
+| 4 demo songs | Papaoutai, Je veux, 99 Luftballons, Despacito — real lrclib.io lyrics |
+| Dev login endpoint | `GET /api/dev/login-as?email=<email>` — creates a real DB session, disabled in prod |
+| Role-based provider caps | PATCH `/api/user/settings` enforces `user→free`, `pro→haiku/free`, `admin→all` |
+| DB-driven player | `/player/demo` and `/player/<uuid>` load song+lyrics from DB |
+| Song import script | `npx tsx scripts/import-song.ts --title X --artist Y --lang fr --audio URL` |
+| `docs/LOCAL_SETUP.md` | Full local dev guide |
+
+**To start from scratch:**
+```powershell
+docker compose up -d
+npx prisma migrate deploy
+npx prisma db seed
+npm run dev
+# Login: http://localhost:3000/api/dev/login-as?email=pro@test.dev
+```
+
+---
+
 ## Remaining Considerations
 
-- **Google OAuth credentials** still need to be configured in `.env` for login to work in dev
-- **ProviderToggle Option C** (profile/settings menu) — secondary access point, not yet built. Currently only the player header pill (Option A) is implemented.
-- **No song title in deck** — `context_song` is stored as a song UUID; the deck shows `♪ Saved from song` without the actual title (requires a DB join to `Song` table, deferred to Sprint 3).
-- **Review lyric context** — the flashcard shows `___` without the surrounding lyric line (SrsCard doesn't store the full lyric context). This is a Sprint 3 enhancement.
+- **ProviderToggle Option C** (profile/settings menu) — secondary access point, not yet built. Only the player header pill (Option A) is implemented.
+- **No song title in deck** — `context_song` is stored as a song UUID; deck shows generic label without the actual title (requires DB join to `Song`, deferred to Sprint 3).
+- **Review lyric context** — flashcard shows `___` without the surrounding lyric line (SrsCard doesn't store full lyric context). Sprint 3 enhancement.
+- **Admin UI** — `/admin` is protected but no admin page exists yet. Sprint 3 or later.
 
 ---
 
@@ -199,4 +225,4 @@ lingobeat/
 
 If picking up this work in a future session:
 
-> "Sprint 2 of LingoBeat is complete. All 9 tasks are implemented and pushed to `feature/sprint2-ui` branch. The next step is to merge `feature/sprint2-ui` into `sprint-2`, then `sprint-2` into `main`. After merging, Sprint 3 can begin — see `docs/superpowers/specs/` for the design context."
+> "Sprint 2 of LingoBeat is complete (71 tests, 0 TS errors). `feature/sprint2-ui` has been merged into `sprint-2`. Local dev infrastructure is on `feature/local-dev-infra` (role field, dev login, demo users/songs, DB-driven player, song import script). Next step: merge `feature/local-dev-infra` into `sprint-2`, then begin Sprint 3. See `docs/superpowers/specs/` for Sprint 3 design context and `docs/LOCAL_SETUP.md` for running the app locally."
