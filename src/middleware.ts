@@ -17,5 +17,13 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/deck/:path*', '/review/:path*', '/admin/:path*', '/onboarding/:path*', '/profile/:path*'],
+  matcher: [
+    '/deck/:path*',
+    '/review/:path*',
+    '/admin/:path*',
+    '/onboarding',
+    '/onboarding/:path*',
+    '/profile',
+    '/profile/:path*',
+  ],
 }

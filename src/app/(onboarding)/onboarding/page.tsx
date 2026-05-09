@@ -11,16 +11,24 @@ export default function OnboardingPage() {
   const [language, setLanguage] = useState<LanguageCode | null>(null)
   const [goal, setGoal] = useState(20)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   async function handleFinish() {
     setSaving(true)
-    await fetch('/api/user/preferences', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target_language: language, daily_goal_xp: goal, onboarding_done: true }),
-    })
-    router.push('/')
+    setError(null)
+    try {
+      const res = await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_language: language, daily_goal_xp: goal, onboarding_done: true }),
+      })
+      if (!res.ok) throw new Error('Failed to save preferences')
+      router.push('/')
+    } catch {
+      setError('Something went wrong. Please try again.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -53,6 +61,7 @@ export default function OnboardingPage() {
             <h1 className="text-2xl font-bold text-slate-100 mb-2 text-center">Set your daily goal</h1>
             <p className="text-slate-400 text-center mb-8">How much do you want to practice?</p>
             <GoalStep selected={goal} onSelect={setGoal} />
+            {error && <p className="text-red-400 text-sm text-center mb-2">{error}</p>}
             <button
               onClick={handleFinish}
               disabled={saving}
