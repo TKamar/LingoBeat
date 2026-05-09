@@ -39,6 +39,16 @@ describe('computeStreak', () => {
     ] as any
     expect(computeStreak(logs)).toBe(1)
   })
+
+  it('returns streak for yesterday-only reviews (grace period)', () => {
+    const logs = [{ reviewed_at: day(1) }] as any // only yesterday, not today
+    expect(computeStreak(logs)).toBe(1)
+  })
+
+  it('returns 0 when last review was 2+ days ago', () => {
+    const logs = [{ reviewed_at: day(2) }] as any
+    expect(computeStreak(logs)).toBe(0)
+  })
 })
 
 describe('computeLevel', () => {

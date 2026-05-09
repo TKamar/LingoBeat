@@ -7,9 +7,12 @@ export async function GET(_req: NextRequest) {
   const session = await auth()
   if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const windowStart = new Date()
+  windowStart.setDate(windowStart.getDate() - 366)
+
   const [logs, totalWords, pref] = await Promise.all([
     db.reviewLog.findMany({
-      where: { user_id: session.user.id },
+      where: { user_id: session.user.id, reviewed_at: { gte: windowStart } },
       select: { reviewed_at: true, rating: true },
       orderBy: { reviewed_at: 'desc' },
     }),

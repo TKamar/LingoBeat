@@ -32,7 +32,10 @@ export function computeStreak(logs: ReviewLogMinimal[]): number {
   )].sort().reverse()
 
   const today = toLocalDateStr(new Date())
-  if (uniqueDays[0] !== today) return 0
+  const yesterday = toLocalDateStr(new Date(Date.now() - 86400000))
+
+  // Accept either today or yesterday as a valid streak start (grace period until midnight)
+  if (uniqueDays[0] !== today && uniqueDays[0] !== yesterday) return 0
 
   let streak = 1
   for (let i = 1; i < uniqueDays.length; i++) {
