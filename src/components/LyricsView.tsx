@@ -46,11 +46,13 @@ export function LyricsView({ languageCode, onWordTap, selectedWord, onWordClose,
           const lineHasSelected = selectedWord != null &&
             lineWords.some(w => w.start_ms === selectedWord.start_ms)
 
+          const isActiveLine = line.lineIndex === activeLineIndex
           return (
             <React.Fragment key={line.lineIndex}>
               <div
-                ref={line.lineIndex === activeLineIndex ? activeLineRef : null}
-                className="flex flex-wrap gap-x-2 gap-y-1"
+                ref={isActiveLine ? activeLineRef : null}
+                data-active-line={isActiveLine}
+                className={`flex flex-wrap gap-x-2 gap-y-1 transition-colors duration-200 ${isActiveLine ? 'bg-blue-500/5 rounded-xl px-2' : ''}`}
               >
                 {lineWords.map((word, j) => {
                   const wordIdx = line.wordStart + j
