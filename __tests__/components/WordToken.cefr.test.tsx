@@ -1,9 +1,9 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 import { WordToken } from '@/components/WordToken'
-import { LyricWord } from '@/lib/types'
+import { CefrLevel, LyricWord } from '@/lib/types'
 
-const makeWord = (text: string, cefr_level?: string): LyricWord => ({
+const makeWord = (text: string, cefr_level?: CefrLevel): LyricWord => ({
   text,
   start_ms: 1000,
   end_ms: 2000,

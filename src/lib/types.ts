@@ -5,11 +5,13 @@
 // ParsedLyrics — contract between LRCParser and all downstream consumers (engine, stores, DB).
 // Song         — lightweight metadata DTO; mirrors the Prisma Song model (omits created_at).
 
+export type CefrLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2'
+
 export interface LyricWord {
   text: string
   start_ms: number
   end_ms: number
-  cefr_level?: string
+  cefr_level?: CefrLevel | null
   romanization?: string
 }
 

@@ -1,9 +1,10 @@
 'use client'
 import React from 'react'
+import type { CefrLevel } from '@/lib/types'
 import { LyricWord } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-const CEFR_COLORS: Record<string, string> = {
+const CEFR_COLORS: Record<CefrLevel, string> = {
   A1: 'text-slate-400',
   A2: 'text-blue-400',
   B1: 'text-yellow-400',
