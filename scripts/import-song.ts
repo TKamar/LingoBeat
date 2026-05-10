@@ -64,6 +64,28 @@ async function main() {
   const parsed = parseLRC(lrcContent)
   console.log(`Parsed ${parsed.words.length} words across ${parsed.lines.length} lines`)
 
+  let annotatedWords = parsed.words
+  try {
+    const uniqueWords = [...new Set(parsed.words.map((w: any) => w.text))]
+    const pythonUrl = process.env.PYTHON_SERVICE_URL ?? 'http://localhost:8000'
+    const cefrRes = await fetch(`${pythonUrl}/annotate-cefr`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ words: uniqueWords, language: lang }),
+    })
+    if (cefrRes.ok) {
+      const cefrData = (await cefrRes.json()) as { word: string; cefr_level: string | null }[]
+      const cefrMap = Object.fromEntries(cefrData.map(({ word, cefr_level }) => [word.toLowerCase(), cefr_level]))
+      annotatedWords = parsed.words.map((w: any) => ({
+        ...w,
+        cefr_level: cefrMap[w.text.toLowerCase()] ?? undefined,
+      }))
+      console.log(`✓ CEFR annotation applied`)
+    }
+  } catch {
+    console.log(`⚠ CEFR annotation unavailable — skipped`)
+  }
+
   const song = await prisma.song.create({
     data: {
       title,
@@ -74,7 +96,7 @@ async function main() {
       media_id: audio,
       lyrics: {
         create: {
-          words: parsed.words as object[],
+          words: annotatedWords as object[],
           lines: parsed.lines as object[],
         },
       },
