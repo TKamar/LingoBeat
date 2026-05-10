@@ -5,8 +5,9 @@ import { NextRequest } from 'next/server'
 jest.mock('@/auth', () => ({ auth: jest.fn() }))
 jest.mock('@/lib/db', () => ({
   db: {
-    srsCard: { findUnique: jest.fn(), update: jest.fn() },
-    reviewLog: { create: jest.fn() },
+    srsCard: { findUnique: jest.fn(), update: jest.fn(), count: jest.fn(), findMany: jest.fn() },
+    reviewLog: { create: jest.fn(), findMany: jest.fn() },
+    userAchievement: { upsert: jest.fn() },
     $transaction: jest.fn(),
   },
 }))
@@ -53,6 +54,9 @@ describe('POST /api/srs/review', () => {
     db.srsCard.findUnique.mockResolvedValue({ id: 'card-1', user_id: 'user-1', fsrs_state: {} })
     const mockUpdated = { id: 'card-1' }
     db.$transaction.mockResolvedValue([mockUpdated, {}])
+    db.reviewLog.findMany.mockResolvedValue([])
+    db.srsCard.count.mockResolvedValue(0)
+    db.srsCard.findMany.mockResolvedValue([])
 
     const req = new NextRequest('http://localhost/api/srs/review', {
       method: 'POST',

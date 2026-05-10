@@ -5,6 +5,11 @@ import { WordPopover } from '@/components/WordPopover'
 const mockFetch = jest.fn()
 global.fetch = mockFetch
 
+jest.mock('framer-motion', () => ({
+  motion: { div: 'div', button: 'button', span: 'span' },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
 jest.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { id: 'user-1' } } }),
 }))
