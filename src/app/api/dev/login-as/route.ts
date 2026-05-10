@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const response = NextResponse.redirect(new URL(redirectTo, req.nextUrl))
   response.cookies.set('authjs.session-token', sessionToken, {
     httpOnly: true,
-    secure: false,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     expires,
     path: '/',
