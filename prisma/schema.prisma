@@ -28,6 +28,7 @@ model User {
   srsCards         SrsCard[]
   reviewLogs       ReviewLog[]
   preference       UserPreference?
+  achievements     UserAchievement[]
 }
 
 model UserPreference {
@@ -41,6 +42,17 @@ model UserPreference {
   updated_at      DateTime @updatedAt
 
   @@map("user_preferences")
+}
+
+model UserAchievement {
+  id           String   @id @default(uuid())
+  user_id      String
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  achievement  String
+  unlocked_at  DateTime @default(now())
+
+  @@unique([user_id, achievement])
+  @@map("user_achievements")
 }
 
 // NextAuth.js v5 adapter tables
