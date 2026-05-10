@@ -59,3 +59,11 @@ export function computeLevel(xp: number): { level: number; xpToNext: number } {
   const xpToNext = level * level * 10 - xp
   return { level, xpToNext }
 }
+
+export function computeLevelProgress(xp: number): { level: number; xpToNext: number; progressPct: number } {
+  const { level, xpToNext } = computeLevel(xp)
+  const levelXP = level * level * 10
+  const prevLevelXP = (level - 1) * (level - 1) * 10
+  const progressPct = levelXP === prevLevelXP ? 100 : Math.round(((xp - prevLevelXP) / (levelXP - prevLevelXP)) * 100)
+  return { level, xpToNext, progressPct }
+}
