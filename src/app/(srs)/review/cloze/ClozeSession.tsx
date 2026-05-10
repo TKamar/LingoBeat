@@ -2,17 +2,10 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-
-interface ClozeCard {
-  card_id: string
-  word: string
-  lyric_line: string
-  choices: string[]
-  song_title: string
-}
+import type { ClozeCardData } from '@/lib/fetchClozeCards'
 
 interface Props {
-  cards: ClozeCard[]
+  cards: ClozeCardData[]
 }
 
 export function ClozeSession({ cards }: Props) {
@@ -40,12 +33,14 @@ export function ClozeSession({ cards }: Props) {
     setXpTotal(p => p + xp)
 
     setTimeout(() => {
-      if (index + 1 >= cards.length) {
-        setDone(true)
-      } else {
-        setIndex(i => i + 1)
+      setIndex(current => {
+        if (current + 1 >= cards.length) {
+          setDone(true)
+          return current
+        }
         setSelected(null)
-      }
+        return current + 1
+      })
     }, 1400)
   }
 
