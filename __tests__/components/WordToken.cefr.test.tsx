@@ -3,6 +3,11 @@ import { render } from '@testing-library/react'
 import { WordToken } from '@/components/WordToken'
 import { CefrLevel, LyricWord } from '@/lib/types'
 
+jest.mock('framer-motion', () => ({
+  motion: { div: 'div', button: 'button', span: 'span' },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
+
 const makeWord = (text: string, cefr_level?: CefrLevel): LyricWord => ({
   text,
   start_ms: 1000,

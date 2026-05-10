@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { motion } from 'framer-motion'
 import type { CefrLevel } from '@/lib/types'
 import { LyricWord } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -28,8 +29,13 @@ export const WordToken = React.memo(function WordToken({ word, index, isActive, 
   }
   const cefrColor = word.cefr_level ? (CEFR_COLORS[word.cefr_level] ?? '') : ''
   return (
-    <span
+    <motion.span
       onClick={handleClick}
+      animate={{
+        scale: isActive ? 1.05 : 1,
+        opacity: isActive ? 1 : 0.75,
+      }}
+      transition={{ duration: 0.12 }}
       className={cn(
         'inline-block px-0.5 rounded cursor-pointer transition-colors duration-75',
         'hover:text-blue-400',
@@ -39,6 +45,6 @@ export const WordToken = React.memo(function WordToken({ word, index, isActive, 
       )}
     >
       {word.text}
-    </span>
+    </motion.span>
   )
 })
