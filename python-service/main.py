@@ -1,7 +1,9 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from providers.registry import registry
 from providers.claude import haiku_provider, sonnet_provider
 from providers.free import free_provider
+from providers.cefr_annotator import annotate_cefr
 from routers.analyze import router as analyze_router
 
 # Register all providers here — adding a new engine = one line below + one new file
@@ -11,6 +13,16 @@ registry.register(free_provider)
 
 app = FastAPI(title="LingoBeat Analysis Service", version="0.2.0")
 app.include_router(analyze_router)
+
+
+class CEFRRequest(BaseModel):
+    words: list[str]
+    language: str = "fr"
+
+
+@app.post("/annotate-cefr")
+async def annotate_cefr_endpoint(req: CEFRRequest):
+    return annotate_cefr(req.words, req.language)
 
 
 @app.get("/health")
