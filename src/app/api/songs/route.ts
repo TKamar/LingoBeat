@@ -4,7 +4,8 @@ import { db } from '@/lib/db'
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const lang = searchParams.get('lang')
-  const limit = Math.min(parseInt(searchParams.get('limit') ?? '20'), 50)
+  const rawLimit = parseInt(searchParams.get('limit') ?? '20', 10)
+  const limit = Math.min(isNaN(rawLimit) ? 20 : rawLimit, 50)
   const cursor = searchParams.get('cursor')
 
   const songs = await db.song.findMany({

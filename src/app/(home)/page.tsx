@@ -1,7 +1,8 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { db } from '@/lib/db'
-import { computeXP, computeStreak, computeLevel, computeTodayXP } from '@/lib/engine/UserStatsEngine'
+import { computeXP, computeStreak, computeLevelProgress, computeTodayXP } from '@/lib/engine/UserStatsEngine'
 import { StreakRing } from '@/components/stats/StreakRing'
 import { XPBar } from '@/components/stats/XPBar'
 import { SongCard } from '@/components/home/SongCard'
@@ -47,7 +48,7 @@ export default async function HomePage() {
   const totalXP = computeXP(logs)
   const todayXP = computeTodayXP(logs)
   const streak = computeStreak(logs)
-  const { level, xpToNext } = computeLevel(totalXP)
+  const { level, xpToNext, progressPct } = computeLevelProgress(totalXP)
   const dailyGoal = pref?.daily_goal_xp ?? 20
   const goalPct = Math.min(Math.round((todayXP / dailyGoal) * 100), 100)
   const name = session.user.name?.split(' ')[0] ?? 'there'
@@ -71,7 +72,7 @@ export default async function HomePage() {
         <div className="flex items-center gap-4 mb-8">
           <StreakRing streak={streak} size={80} />
           <div className="flex-1 flex flex-col gap-3">
-            <XPBar level={level} xpToNext={xpToNext} totalXP={totalXP} />
+            <XPBar level={level} xpToNext={xpToNext} progressPct={progressPct} />
             <div className="text-sm text-slate-400">
               Today: <span className="text-slate-200 font-medium">{todayXP} / {dailyGoal} XP</span>
               <span className="ml-2 text-xs text-slate-600">({goalPct}%)</span>
@@ -81,7 +82,7 @@ export default async function HomePage() {
 
         {/* Due words CTA */}
         {dueCount > 0 && (
-          <a
+          <Link
             href="/review"
             className="block w-full mb-6 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 hover:border-blue-500/60 transition-colors"
           >
@@ -92,7 +93,7 @@ export default async function HomePage() {
               </div>
               <span className="text-blue-400 text-xl">→</span>
             </div>
-          </a>
+          </Link>
         )}
 
         {/* Featured songs */}

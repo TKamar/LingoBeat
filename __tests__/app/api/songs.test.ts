@@ -27,6 +27,9 @@ describe('GET /api/songs', () => {
     const body = await res.json()
     expect(body.songs).toHaveLength(1)
     expect(body.songs[0].language_code).toBe('fr')
+    expect(db.song.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { language_code: 'fr' } })
+    )
   })
 
   it('returns nextCursor when result count equals limit', async () => {

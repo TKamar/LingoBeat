@@ -4,14 +4,10 @@ import { motion } from 'framer-motion'
 interface Props {
   level: number
   xpToNext: number
-  totalXP: number
+  progressPct: number
 }
 
-export function XPBar({ level, xpToNext, totalXP }: Props) {
-  const levelXP = level * level * 10
-  const prevLevelXP = (level - 1) * (level - 1) * 10
-  const progress = levelXP === prevLevelXP ? 1 : (totalXP - prevLevelXP) / (levelXP - prevLevelXP)
-
+export function XPBar({ level, xpToNext, progressPct }: Props) {
   return (
     <div className="flex items-center gap-3 w-full">
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center">
@@ -22,7 +18,7 @@ export function XPBar({ level, xpToNext, totalXP }: Props) {
           <motion.div
             className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
             initial={{ width: '0%' }}
-            animate={{ width: `${Math.round(Math.min(progress, 1) * 100)}%` }}
+            animate={{ width: `${Math.max(0, Math.min(100, progressPct))}%` }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           />
         </div>
